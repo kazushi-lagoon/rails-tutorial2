@@ -25,6 +25,10 @@ Rails.application.routes.draw do
   
   resources :users
   # rails routes で、一番左のPrefixのところは、最後に_pathを付けると、名前付きルートになる。
+  
+  resources :account_activations, only: [:edit]
+  #=> get '/account_activations/:id/edit', to: 'account_activations#edit'
+  # params[:id] <= 有効化トークン　:id は、別に数値でなくて、文字列でも問題ない。
 
   root 'application#hello'
 

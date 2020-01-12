@@ -1,0 +1,21 @@
+<h1>Sample App</h1>
+
+<p>Hi <%= @user.name %>,</p>
+
+<p>
+Welcome to the Sample App! Click on the link below to activate your account:
+</p>
+
+<%= link_to "Activate", edit_account_activation_url(@user.activation_token, email: @user.email) %>
+  <!-- 今回は、'/account_activations/...' となる、_path ではなく、ドメイン名まで完全に含む、_url でないと、リンクとして機能しない。
+  　これまでは引数に@user を渡すと、:id の部分に、デフォルトで、@user.id が入っていたが、今回はそのレールに乗りたくないので、
+  　明示的に、@user.activation_token にする。また、オプション引数で、email: のようにハッシュを渡すと、パラメーターとして、...?email= という形で、
+  　リンクに付け加えられる。'/account_activations/:id/edit' に、GET リクエストが発行されると、反応するコントローラー、
+  　処理を書きたいが、その中で認証メソッド（.authenticated?()）を使用する上で、どのユーザーオブジェクトに対して認証をかけるか、.find_by()
+  　で引っ張ってくる必要があるが、activation_token はDB内には存在しない（ハッシュ化させた値、activation_tokenは存在する）ので、
+  　email で、.find_by() をかけることにする。remember_token でも同じ問題があった。そこでは、cookies.permanent.signed[:user_id] = user.id
+  　にあたるものである。
+  　別に、id でも問題ないが、ユーザーさんに見せなくて済むなら、見せたくない情報。
+  　@ など、URL には扱えない文字があって、実際に表示されるURLでは、@ はエスケープされて、%40 になる。'..._url' では、自動的に変換されるので、
+　　実装する際に特に意識する必要はないが、preview や、delivery_method = :test のログ上では、そのように表記されるので、知っておく。-->
+                                                    

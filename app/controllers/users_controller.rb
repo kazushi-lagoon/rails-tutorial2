@@ -14,7 +14,7 @@ class UsersController < ApplicationController
   # という処理になる。correct_userメソッドでは、loggeed_in_userメソッドを処理した後に呼び出されるので、current_user のnilチェックをしなくて済む。
   # 前提を積み重ねることによって、条件分岐の工程を踏んでいない。
   
-  before_action :admin_user,     only: :destroy
+  before_action :admin_user,     only: :destroy #=> only は、アクションが一つだけなら、配列にしなくてよい。
   
   def index
      @users = User.paginate(page: params[:page])
@@ -51,15 +51,19 @@ class UsersController < ApplicationController
       # =>.saveでUserのvalidatesが実行され、バリデーションの戻り値は、通ればそのオブジェクトが、通らなければfaulseが返ってくる。
       # ruby では、if文の条件式では、nilとfalse以外は、trueとして評価されるので、@user.save   if @user.save == faulse を一行で書ける。
       # 保存の成功をここで扱う。
-      flash[:success] = "Welcome to the Sample App!"  #=> flash[:success] は、実体はメソッドだが、特殊な変数として考えればわかりやすい。
-      redirect_to @user
+      # flash[:success] = "Welcome to the Sample App!"  #=> flash[:success] は、実体はメソッドだが、特殊な変数として考えればわかりやすい。
+      # redirect_to @user
       #     redirect_to "/users/#{@user.id}"  redirect_to は、GETリクエストを投げる、render はテンプレートを呼び出す。
       # =>  redirect_to "user_path(@user.id)"  普通は、名前付きルートにする。変数のように扱われるが実体はメソッドで、:idのようにurlにパラメーターをとる場合、
       #                                        引数を取る。引数が、"/users/:id"の、:idの部分に入る。
       # =>  redirect_to "user_path(@user)"  名前付きルートのデフォルトで、引数にオブジェクトが入ると、そのオブジェクトのidが入る。
       # =>  redirect_to @user  redirect_to のデフォルトで、"user_path(@user)"になる。
-      log_in @user
      
+      # UserMailer.account_activation(@user).deliver_now #=> メソッドチェーンで、.deliver_now は、mail オブジェクトに対して使えるインスタンスメソッド。
+                                                       # このメソッドが実行されて、mail オブジェクトは初めて送信される。
+      @user.send_activation_email
+      flash[:info] = "Please check your email to activate your account."
+      redirect_to root_url
     else
       render 'new'
     end
@@ -82,7 +86,7 @@ class UsersController < ApplicationController
   end
   
   def destroy
-    User.find(params[:id]).destroy
+    User.find(params[:id]).destroy #=> メソッドチェーン
     flash[:success] = "User deleted"
     redirect_to users_url
   end

@@ -58,7 +58,7 @@ module SessionsHelper
       # しかし、これは原始的な方法で、コードのテストが何%網羅されているかチェックできるサービス（有料）が存在する。
       user = User.find_by(id: user_id)       # elsif なので、session が切れていなければ、という意味になる。つまり、前回のログインから一度ブラウザを
                                              # 落としていたら、という意味。
-      if user && user.authenticated?(cookies[:remember_token]) #=> params[:session][:password] に代わるもので、cookies はブラウザが永続的に保持している
+      if user && user.authenticated?(:remember,cookies[:remember_token]) #=> params[:session][:password] に代わるもので、cookies はブラウザが永続的に保持している
         log_in user                                            # ものなので、ここでも呼び出せる。
         @current_user = user
       end

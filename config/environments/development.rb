@@ -27,7 +27,14 @@ Rails.application.configure do
   end
 
   # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.delivery_method = :test #=> メールを送り付けるフリをする、というメソッド。実際にメールを送って、文面を確認するのは面倒なので、
+                                               # 開発環境（config/environment/development.rb）においては、メールが送られる処理が実行されるときに、
+                                               # rails server のログに出すように設定した。Action mailer preview という。
+  host = '1c132407189b4f07996d84170396d019.vfs.cloud9.us-east-2.amazonaws.com' 
+  config.action_mailer.default_url_options = { host: host, protocol: 'https' }
+  #=> メールの文面に貼り付けるurl は、'..._url' でコーディングしているので、action_mailer　における、
+  # ドメイン名を正しく(開発環境における自分のドメイン名)記述する必要がある。
 
   config.action_mailer.perform_caching = false
 

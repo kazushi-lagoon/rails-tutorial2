@@ -15,20 +15,26 @@ class SessionsController < ApplicationController
       # 　nilはオブジェクトなのでメッセージの受け渡しは可能だが、authenticateメソッドが定義されていない。userオブジェクトは、has_secure_passwordで
       #定義されている。
       # ユーザーログイン後にユーザー情報のページにリダイレクトする
-      
-    
-      log_in user
-      #=> session[:user_id]=user.id　といきなりしてもいいが、可読性を上げるために便利メソッドとして　log_in(user) を定義した。
-      params[:session][:remember_me] == '1' ? remember(user) : forget(user)
-      #=>この行の処理は、以下の処理を、三項演算子を利用して一行にしたものである。
+
+
+      if user.activated?
+        log_in user
+        #=> session[:user_id]=user.id　といきなりしてもいいが、可読性を上げるために便利メソッドとして　log_in(user) を定義した。
+        params[:session][:remember_me] == '1' ? remember(user) : forget(user)
+        #=>この行の処理は、以下の処理を、三項演算子を利用して一行にしたものである。
         #if params[:session][:remember_me] == '1'
         #  remember(user)
         #else
         #  forget(user)
         #end
-        
-      redirect_back_or user
-      #=> 
+        redirect_back_or user
+      else
+        message  = "Account not activated. "
+        message += "Check your email for the activation link."
+        flash[:warning] = message
+        redirect_to root_url
+      end
+      
     else
       # エラーメッセージを作成する
       flash.now[:danger] = 'Invalid email/password combination' # 二回目以降のGETリクエストで消えるので、renderだと、二回目のテンプレートの

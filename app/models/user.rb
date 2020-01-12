@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  attr_accessor :remember_token
+  attr_accessor :remember_token, :activation_token
   #=> 仮想的属性を与える。仮想的属性の生存期間は、次のリクエストが発行されるまで。コンソール上では、exit するまで。
   # 仮想的属性は、一時的にオブジェクトに値を持たせるが、データベースには反映させない情報。今回は、この情報が消失するまでに、ユーザーのクッキーに
   # 保存し、ハッシュ化させた値をデータベースに保存したい。
@@ -11,6 +11,15 @@ class User < ApplicationRecord
   # def remember_token
   #   @remember
   # end
+  
+  before_save   :downcase_email
+  #=> beforeフィルターのモデルバージョンで、コールバック処理という。
+  # また、before_save {self.email = email.downcase} とすることもできる。メソッドはそもそもコードの塊なので、ブロックで渡すことも可能である。
+  # :downcase_emailで呼び出す方法を、メソッド参照といい、メソッドを呼び出すときは、: がつく。
+  # 基本的にはないが、メールアドレスの大文字・小文字を区別してくれないDBがあるかもしれないので、念のために、小文字にしておく。
+  before_create :create_activation_digest
+  # before_create は、新しくカラムが作成されて、保存されるときにだけ、実行されるが、before_save は、それに加えて、既存のカラムが更新されて、保存
+  # されるときにも実行される。
   
   validates :name,  presence: true, length: { maximum: 50 }
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
@@ -76,8 +85,8 @@ class User < ApplicationRecord
   end
   
   # 渡されたトークンがダイジェストと一致したらtrueを返す
-  def authenticated?(remember_token)
-    return false if remember_digest.nil? #=> 二つの異なる種類のブラウザ（ここではChromeとFirefoxとする）で、同時にこのアプリを立ち上げ、
+  # def authenticated?(remember_token)
+  #   return false if remember_digest.nil? #=> 二つの異なる種類のブラウザ（ここではChromeとFirefoxとする）で、同時にこのアプリを立ち上げ、
                                          # Chromeでログアウトしてから、一度Firefoxのブラウザを落として、もう一度Firefoxでこのアプリにアクセスすると、
                                          # Chromeのログアウトによってremember_digest がnil になっていて、Firefoxでアクセスした時に、Firefoxでcookie
                                          # は残っているので、このauthenticated?メソッドが発動されて、remember_digest がnil のためBCrypt で例外エラー
@@ -87,7 +96,59 @@ class User < ApplicationRecord
                                          # 以降の処理は実行させない、ということができる。この種類のバグは、cookie が残っていたら、remember_digestも
                                          # あるはずだという、誤った考えから生まれる。上でみてきたように、cookie が残っているのに、remember_digestが
                                          # 消失している場合もあり得る。
-    BCrypt::Password.new(self.remember_digest).is_password?(remember_token)
+  #   BCrypt::Password.new(self.remember_digest).is_password?(remember_token)
+  # end
+  
+  # def authenticated?(activation_token)
+  #   return false if remember_digest.nil? 
+  #   BCrypt::Password.new(self.activation_digest).is_password?(activation_token)
+  # end
+  #=> このように、activation_token の認証メソッドを新たに作成してもよいが、remember_token の認証メソッドと、コードがほとんど変わらない。
+  # remember_digest と、activation_digest で、対象のカラムが変わるだけ。
+
+  
+  def authenticated?(attribute, token)
+    digest = self.send("#{attribute}_digest")
+    return false if digest.nil?
+    BCrypt::Password.new(digest).is_password?(token)
   end
+  #=> user=User.first で、a="foobar" で、b="reverse" にして、a.reverse=> "raboof" a.send b => "raboof" で、結果は同じになる。
+  # send メソッドは、引数に文字列でメソッド名を受け取って、その処理を実行する。a.remember_digest=> nil   a.activation_digest=> bgprgq03g4pirh^039gp3b
+  # のようになるが、これを抽象化して、 a="remember"のとき、  user.#{a}_digest=>nil   a="activation"のとき、user.#{a}_digest=> bgprgq03g4pirh^039gp3b
+  # のようにして、#{a}_digest このメソッドに一本化したい。しかし、式展開は文字列の中でしか使用できないという問題がある。そこで、send メソッドを利用
+  # して、呼び出すメソッドを文字列にして、これを解決する。user.send("#{a}_digest")
+  # send メソッドを利用して、どのメソッド（カラム名）になるか、呼び出される時に（引数次第で）切り替わる、この手法を、メタプログラミングの一種で、
+  # 動的ディスパッチと呼ぶ。
+  # attribute=:remember にしても、ruby のルールで、シンボルも文字列の式展開では文字列になる。メソッド参照のような感じで、呼び出し元の引数のところに、
+  # :rememberのように、シンボルを渡して、メソッドのために使っているというニュアンスを出すと、第三者の開発者からしても読みやすい。
+  # bcrypt を使用した認証メソッドは、この一つのメソッドで事足りる。しかし、マイグレーションファイルを作成する段階から、カラム名を、
+  # _digest で統一するなど、実際にこの動的ディスパッチで実装するのは、結構難易度が高い。
+
+  # アカウントを有効にする
+  def activate
+    self.update_attribute(:activated,    true)
+    self.update_attribute(:activated_at, Time.zone.now)
+  end
+
+  # 有効化用のメールを送信する
+  def send_activation_email
+    UserMailer.account_activation(self).deliver_now
+  end
+  #=> @user.send_activation_email で、self のところに、@user が入り、もとのリファクタリングする前のコードになる。
+  # クラスメソッドは、インスタンスに対しても呼び出せる。
+
+
+   private
+
+    # メールアドレスをすべて小文字にする
+    def downcase_email
+      self.email = email.downcase # 左辺は、self. がないと、変数になってしまうので注意。
+    end
+    
+    # 有効化トークンとダイジェストを作成および代入する
+    def create_activation_digest
+      self.activation_token  = User.new_token
+      self.activation_digest = User.digest(activation_token)
+    end
   
 end
