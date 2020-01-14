@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
   
+  get 'password_resets/new'
+
+  get 'password_resets/edit'
+
   get 'sessions/new'
 
   get 'users/new'
@@ -29,6 +33,8 @@ Rails.application.routes.draw do
   resources :account_activations, only: [:edit]
   #=> get '/account_activations/:id/edit', to: 'account_activations#edit'
   # params[:id] <= 有効化トークン　:id は、別に数値でなくて、文字列でも問題ない。
+  
+  resources :password_resets,     only: [:new, :create, :edit, :update]
 
   root 'application#hello'
 

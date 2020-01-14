@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  attr_accessor :remember_token, :activation_token
+  attr_accessor :remember_token, :activation_token, :reset_token
   #=> 仮想的属性を与える。仮想的属性の生存期間は、次のリクエストが発行されるまで。コンソール上では、exit するまで。
   # 仮想的属性は、一時的にオブジェクトに値を持たせるが、データベースには反映させない情報。今回は、この情報が消失するまでに、ユーザーのクッキーに
   # 保存し、ハッシュ化させた値をデータベースに保存したい。
@@ -137,6 +137,25 @@ class User < ApplicationRecord
   #=> @user.send_activation_email で、self のところに、@user が入り、もとのリファクタリングする前のコードになる。
   # クラスメソッドは、インスタンスに対しても呼び出せる。
 
+  # パスワード再設定の属性を設定する
+  def create_reset_digest
+    self.reset_token = User.new_token
+    update_attribute(:reset_digest,  User.digest(reset_token))
+    update_attribute(:reset_sent_at, Time.zone.now)
+     #=> 何万回と、password_reset/:id/edit を発行すると、:id の部分も何万通りとなって、テキトーな文字列を入力しても、ヒットしてしまう恐れがある。
+     # よって、時間による有効期限を与えたいので、:reset_sent_at を設定する。
+  end
+
+  # パスワード再設定のメールを送信する
+  def send_password_reset_email
+    UserMailer.password_reset(self).deliver_now
+  end
+  
+  
+  # パスワード再設定の期限が切れている場合はtrueを返す
+  def password_reset_expired?
+    reset_sent_at < 2.hours.ago
+  end
 
    private
 

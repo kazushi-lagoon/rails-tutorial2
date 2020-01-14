@@ -20,9 +20,8 @@ class UserMailer < ApplicationMailer
   # されるところが、普通のメソッドとは異なる。
   
   
-  def password_reset
-    @greeting = "Hi"
-
-    mail to: "to@example.org"
+  def password_reset(user)
+    @user = user
+    mail to: user.email, subject: "Password reset"
   end
 end
