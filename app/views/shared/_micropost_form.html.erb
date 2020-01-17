@@ -1,0 +1,27 @@
+<%= form_for(@micropost) do |f| %>
+  <%= render 'shared/error_messages', object: f.object %>
+  <!--=> パーシャルにはオプションを渡すことができて、form_for の引数の、@micropost が、f.object であり、それが変数object として、
+  　'shared/error_messages' 内で使える、これはパーシャルの機能。これまでの、エラーメッセージのパージャルは、userオブジェクトに対するバリデーション
+  　におけるものであったが、今回はmicropostオブジェクトに対するものである。
+  　f.objectのところを、@micropost としてしまうと、usersリソース側から（'users/new.html.erb'など）参照するときに、
+  　@micropost を宣言していないので、nil で失敗してしまう。もちろん、'shared/error_messages'　内で、
+  　もう一つif @micropost.errors.any? で用意してもよいが、ドライな設計にならない。この技を自分で思いついて実装するのは、それなりに難易度が高い。-->
+  
+  <div class="field">
+    <%= f.text_area :content, placeholder: "Compose new micropost..." %>
+  </div>
+  <%= f.submit "Post", class: "btn btn-primary" %>
+  <span class="picture">
+    <%= f.file_field :picture, accept: 'image/jpeg,image/gif,image/png' %>
+  </span>
+
+<% end %>
+
+<script type="text/javascript">
+  $('#micropost_picture').bind('change', function() {
+    var size_in_megabytes = this.files[0].size/1024/1024;
+    if (size_in_megabytes > 5) {
+      alert('Maximum file size is 5MB. Please choose a smaller file.');
+    }
+  });
+</script>

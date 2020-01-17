@@ -25,3 +25,10 @@ end
 #  .create! の、! は、これによって、バリデーションで弾かれた段階で、例外処理を発生させる。これがない場合だと、false が返ってきも、処理は続行されて、
 # 無駄に時間がかかってしまう。db:seeds にはりきとうせいが無いため（マイグレーションファイルと違って）、二回連続で、rails db:seed を実行しても、
 # 全く同じ処理が始まり、メールアドレスの一意性でバリデーションで弾かれるのが、100件で起こる時間を待たなければならなくなってしまう。
+
+users = User.order(:created_at).take(6) 
+50.times do
+  content = Faker::Lorem.sentence(5)
+  users.each { |user| user.microposts.create!(content: content) }
+end
+#=> User の先頭の六つのオブジェクトに、それぞれ50の投稿を持たせる。

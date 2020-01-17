@@ -80,6 +80,15 @@ class UserTest < ActiveSupport::TestCase
     assert_not @user.authenticated?(:remember,'')
   end
   
+  test "associated microposts should be destroyed" do
+    @user.save
+    @user.microposts.create!(content: "Lorem ipsum")
+     #=> ! は、この行の処理で失敗したら、以降のテストは意味がないので、この行で失敗したらそこで処理止めるというコード。
+    assert_difference 'Micropost.count', -1 do
+      @user.destroy
+    end
+  end
+  
 end
 
 

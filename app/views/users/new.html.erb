@@ -11,7 +11,7 @@
     <!-- htmlでは、<form action="/users",method="post",...></form>となっている。これは、form_forの引数にUser.newで新しく生成されたUserモデルのインスタンス
     が入っているため、users#createを動かすためのurlとHTTPリクエストをroutesから探して（"/users",post）、上述のhtmlに変換させている。-->
     
-      <%= render 'shared/error_messages' %>
+      <%= render 'shared/error_messages' , object: f.object %>
       <!--エラー文は、後々また使いそうなので、パーシャル化しておく。-->
 
       <%= f.label :name %>

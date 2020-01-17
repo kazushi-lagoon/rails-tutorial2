@@ -7,4 +7,21 @@ class ApplicationController < ActionController::Base
   def hello
     render html: "hello, world!"
   end
+  
+  
+  private
+  #=> privateメソッドは、外側のクラスでは呼び出せないが、継承した子クラスでは呼び出せる。
+  
+   # ログイン済みユーザーかどうか確認
+   def logged_in_user #=> このメソッドも、このコントローラー内でしか使わないので、privateメソッドにした。
+      unless logged_in? #=> unless は、if not を意味する。
+        store_location
+        flash[:danger] = "Please log in."
+        redirect_to login_url
+      end
+   end
+    #=> ログインしていない状態で、edit,update が呼び出されるケースは、直接リクエストを送る場合が考えられる。しかし他に、edit の呼び出しに関しては、
+    # ブラウザのヘッダーのSettingはログイン状態でなければ存在しないが、元々ログインしていたのに、たまたまsessionやcookie が切れてしまっていて、
+    # ログインしていないのに、Setting　が表示されているケース起こり得る。
+  
 end

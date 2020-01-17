@@ -1,6 +1,10 @@
 class PasswordResetsController < ApplicationController
   
   before_action :get_user,   only: [:edit, :update]
+  #=> editアクション、updateアクションの、両方で、@user = User.find_by(email: params[:email])　がある。
+  # beforeフィルターを用いた、リファクタリング。しかし、コードを読む側が、あちこち見なければいけない範囲が広がるので、議論の余地がある。
+  # ただし、:get_user がないと、:valid_user　でも、@user = User.find_by(email: params[:email])　を書く必要がでてしまう。なので、
+  # :get_user　は、イメージとしては、beforebefore フィルターで、:valid_user　ので、前に呼び出す。
   before_action :valid_user, only: [:edit, :update]
   before_action :check_expiration, only: [:edit, :update]
   
@@ -23,9 +27,15 @@ class PasswordResetsController < ApplicationController
   def edit
   end
   
+  # PATCH '/password_resets/:id'
+  # submit ボタンを押すと、'password_resets/:id/edit' の:id が、'/password_resets/:id' の:id に入る。
   def update
     if params[:user][:password].empty?                  
       @user.errors.add(:password, :blank)
+      #=> user.rb で、passwordカラムが、allow_nilオプションによって、空でもパスワードをリセットできてしまう。なので、自分で上記のようなコードで、
+      # これを解決する。.errors.add によって、エラー文を持たせることができる。実は、user.rb のバリデーションを走らせるときにも、
+      # 裏側で、.errors.add が動いているだけなので、自分で用意しても同じことができる。
+      
       render 'edit'
     elsif @user.update_attributes(user_params)          
       log_in @user

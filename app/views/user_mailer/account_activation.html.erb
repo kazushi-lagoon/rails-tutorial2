@@ -17,5 +17,6 @@ Welcome to the Sample App! Click on the link below to activate your account:
   　にあたるものである。
   　別に、id でも問題ないが、ユーザーさんに見せなくて済むなら、見せたくない情報。
   　@ など、URL には扱えない文字があって、実際に表示されるURLでは、@ はエスケープされて、%40 になる。'..._url' では、自動的に変換されるので、
-　　実装する際に特に意識する必要はないが、preview や、delivery_method = :test のログ上では、そのように表記されるので、知っておく。-->
+　　実装する際に特に意識する必要はないが、preview や、delivery_method = :test のログ上では、そのように表記されるので、知っておく。
+　　@user は、user_mailer.rb から。そして、user_mailer.rb では、引数からuserインスタンスを引っ張ってきている。-->
                                                     

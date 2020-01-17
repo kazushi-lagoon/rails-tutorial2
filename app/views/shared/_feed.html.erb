@@ -1,0 +1,8 @@
+<% if @feed_items.any? %>
+  <ol class="microposts">
+    <%= render @feed_items %>
+    <!--=> render の引数は、名前が問題なのではなく、オブジェクトの実体が問題で、実体は、Micropostクラスのインスタンスオブジェクトなので、
+    　　'/microposts/_micropost.html.erb' が、レンダリングの対象となる。-->
+  </ol>
+  <%= will_paginate @feed_items %>
+<% end %>

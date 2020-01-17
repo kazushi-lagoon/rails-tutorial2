@@ -22,6 +22,7 @@ class UsersController < ApplicationController
   
   def show
      @user = User.find(params[:id])
+     @microposts = @user.microposts.paginate(page: params[:page])
   end
   
   def new
@@ -59,7 +60,7 @@ class UsersController < ApplicationController
       # =>  redirect_to "user_path(@user)"  名前付きルートのデフォルトで、引数にオブジェクトが入ると、そのオブジェクトのidが入る。
       # =>  redirect_to @user  redirect_to のデフォルトで、"user_path(@user)"になる。
      
-      # UserMailer.account_activation(@user).deliver_now #=> メソッドチェーンで、.deliver_now は、mail オブジェクトに対して使えるインスタンスメソッド。
+      #UserMailer.account_activation(@user).deliver_now #=> メソッドチェーンで、.deliver_now は、mail オブジェクトに対して使えるインスタンスメソッド。
                                                        # このメソッドが実行されて、mail オブジェクトは初めて送信される。
       @user.send_activation_email
       flash[:info] = "Please check your email to activate your account."
@@ -109,17 +110,6 @@ class UsersController < ApplicationController
   
     # beforeアクション
 
-    # ログイン済みユーザーかどうか確認
-    def logged_in_user #=> このメソッドも、このコントローラー内でしか使わないので、privateメソッドにした。
-      unless logged_in? #=> unless は、if not を意味する。
-        store_location
-        flash[:danger] = "Please log in."
-        redirect_to login_url
-      end
-    end
-    #=> ログインしていない状態で、edit,update が呼び出されるケースは、直接リクエストを送る場合が考えられる。しかし他に、edit の呼び出しに関しては、
-    # ブラウザのヘッダーのSettingはログイン状態でなければ存在しないが、元々ログインしていたのに、たまたまsessionやcookie が切れてしまっていて、
-    # ログインしていないのに、Setting　が表示されているケース起こり得る。
     
     # 正しいユーザーかどうか確認
     def correct_user

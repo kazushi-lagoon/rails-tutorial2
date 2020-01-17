@@ -23,6 +23,8 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
     # パスワード再設定フォームのテスト
     user = assigns(:user)
+    #=> reset_token は、DBのカラムにも存在せず、仮想的属性で、インスタンスオブジェクトがないと呼び出せないので、assignsメソッドを利用している。
+    # assignsメソッドは、そのようなときに使用されるメソッド。
     # メールアドレスが無効
     get edit_password_reset_path(user.reset_token, email: "")
     assert_redirected_to root_url

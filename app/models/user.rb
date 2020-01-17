@@ -1,4 +1,10 @@
 class User < ApplicationRecord
+  has_many :microposts, dependent: :destroy #=> dependent: :destroy は、オプション。
+  #=> micropost.rb の、belongs_to :user だけでは、相対性があるわけではなく、一方向的なので、:user から見て、一対一の関係なのか、一対多の関係なのか
+  # 分からないので（つまり、ユーザー一人につき、一つの投稿しかできないのか、複数の投稿ができるのか）、
+  # has_many :microposts で、一対多の関係であることを、rails側に伝える。一対一は、belongs_to、一対多は、has_many。どちらのモデル側からみるかによって、
+  # 一対一、一対多の関係性は変わる。
+  
   attr_accessor :remember_token, :activation_token, :reset_token
   #=> 仮想的属性を与える。仮想的属性の生存期間は、次のリクエストが発行されるまで。コンソール上では、exit するまで。
   # 仮想的属性は、一時的にオブジェクトに値を持たせるが、データベースには反映させない情報。今回は、この情報が消失するまでに、ユーザーのクッキーに
@@ -155,6 +161,15 @@ class User < ApplicationRecord
   # パスワード再設定の期限が切れている場合はtrueを返す
   def password_reset_expired?
     reset_sent_at < 2.hours.ago
+    #=> 二時間前より昔かどうか。　3.hours.ago < 2.hours.ago =>true 
+  end
+  
+  # 試作feedの定義
+  # 完全な実装は次章の「ユーザーをフォローする」を参照
+  def feed
+    Micropost.where("user_id = ?",self.id)
+    #=> current_user.feed は、feedメソッドを用意せずに、current_user.microposts でもコーディングできてしまうが、後々フォローしている人の
+    # micropostsmicroposts のデータの集合を取得するということもしたくて、どうせこのメソッドが必要になるので、先回りして、feedメソッドを用意している。
   end
 
    private

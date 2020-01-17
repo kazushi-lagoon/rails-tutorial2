@@ -13,7 +13,7 @@
       <!--postで投げたものを、_method というparamsの属性を与えて、patchリクエストとして処理されるようにしている。patchとdeleteが、ブラウザに標準で搭載-->
       <!--されていないのは、HTTPが設計された1970,80年代では、WEBがここまで複雑になると想定されていなかったためと思われる。-->
       <!--patchリクエストがあるかのように偽装して、RESTfulな状態を作っている。-->
-      <%= render 'shared/error_messages' %>
+      <%= render 'shared/error_messages', object: f.object %>
 
       <%= f.label :name %>
       <%= f.text_field :name, class: 'form-control' %>
