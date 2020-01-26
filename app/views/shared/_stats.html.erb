@@ -1,0 +1,17 @@
+<% @user ||= current_user %>
+<!--'/static_pages/home.html.erb' '/users/show.html.erb' の二つでこのパーシャルを利用する。showテンプレートでは、コントローラーで@user が与えられている-->
+<!--ので、@user=@user で、homeテンプレートでは、@user が与えられていないが、@user=current_user となって、うまくいく。-->
+<div class="stats">
+  <a href="<%= following_user_path(@user) %>">
+    <strong id="following" class="stat">
+      <%= @user.following.count %>
+    </strong>
+    following
+  </a>
+  <a href="<%= followers_user_path(@user) %>">
+    <strong id="followers" class="stat">
+      <%= @user.followers.count %>
+    </strong>
+    followers
+  </a>
+</div>

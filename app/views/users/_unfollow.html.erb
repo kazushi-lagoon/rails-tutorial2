@@ -1,0 +1,12 @@
+<%= form_for(current_user.active_relationships.find_by(followed_id: @user.id),
+             html: { method: :delete },
+             remote: true) do |f| %>
+    <!--PATCH '/relationships/:id'  :id は、find_by で取得した、relationshipsテーブルのレコードのid。'/_follow.html.erb' では、.build で、
+    新しいオブジェクトなので、渡せる:id が無いが、そこで発行されるリクエストは、POST '/relationships' なので、問題ない。
+    ここでは、ユーザー登録や更新とは異なり、コントローラーからビューを呼び出していないので、インスタンス変数を宣言できていないので、
+    直接form_for の引数内メソッドを使用して、オブジェクトを呼び出している。
+    DELETE '/relationships/:id' というリクエストを発行したいので、PATCH をDELETE に変えるだけで、それを可能にできる。
+    '/_user.html.erb' の削除は、link_to メソッドを使っていて、今回はform_for なので、今回は表記がhtml: { method: :delete }　
+    となっていて前回とは異なることに注意。、-->
+  <%= f.submit "Unfollow", class: "btn" %>
+<% end %>

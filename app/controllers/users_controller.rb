@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :logged_in_user, only: [:index, :edit, :update, :destroy] #=> ログイン状態でなければ、更新できないようにする。
+  before_action :logged_in_user, only: [:index, :edit, :update, :destroy, :following, :followers] #=> ログイン状態でなければ、更新できないようにする。
   #=> beforeフィルターは、アクションを呼び出す前に、メソッドを呼び出す、という機能なので、このようにcontroller内で書く。:logged_in_userは、
   # そのcontroller内で実装されるbeforeフィルターの中で呼び出されるメソッドだから、controllerの外でで呼び出さないのであれば、privateメソッドにする。
   #=> メソッドを呼び出す時、rubyでは慣習的にシンボルにする（「メソッド参照」という）。メソッド名では、ハイフンではなく、アンダーバーを使う理由は、
@@ -91,6 +91,22 @@ class UsersController < ApplicationController
     flash[:success] = "User deleted"
     redirect_to users_url
   end
+  
+  def following
+    @title = "Following"
+    @user  = User.find(params[:id])
+    @users = @user.following.paginate(page: params[:page])
+    render 'show_follow'
+  end
+
+  def followers
+    @title = "Followers"
+    @user  = User.find(params[:id])
+    @users = @user.followers.paginate(page: params[:page])
+    render 'show_follow'
+  end
+  #=> '/users/:id/following'  '/users/:id/followers'  で、描画されるテンプレートのデザインは、ほぼ同じなので、テンプレートを共通にさせて、
+  # 宣言するインスタンス変数も一致させて、インスタンス変数の中身だけを変える。
   
   private #=> このコードを宣言させておくと、以降のメソッドは全てprivateメソッドになるという独特の振る舞いをみせ、、このコントローラー内でしかアクセス
           # できなくなる。ruby は、クラスもメソッドも上書きできる言語なので、rails の外側でuser_params を上書きして、セキュリティホールを作ることもできる。

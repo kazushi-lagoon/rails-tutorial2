@@ -5,6 +5,29 @@ class User < ApplicationRecord
   # has_many :microposts で、一対多の関係であることを、rails側に伝える。一対一は、belongs_to、一対多は、has_many。どちらのモデル側からみるかによって、
   # 一対一、一対多の関係性は変わる。
   
+  has_many :active_relationships, class_name:  "Relationship", #=> これがないとデフォルトで、Active_relationshipクラスの、user_id と紐づけようとする。
+                                  foreign_key: "follower_id", #=> これがないとデフォルトで、Relationshipクラスの、user_id と紐づけようとする。
+                                  dependent:   :destroy
+  #=> has_many も、belongs_to も、関連付けをするメソッドであるが、メソッドを定義するメソッドである。has_many :microposts では、デフォルトで、
+  # Micropostクラスの、user_id と、Userクラスのid（ここは'models/user.rb'ファイルである。） を紐づける。なので、:active_relationships のところの
+  # 命名は、なんでもよい。form_forメソッドのオプション引数と同様、オプションで必要な情報を与えることで、デフォルトから外れることができる。
+                                  
+  has_many :following, through: :active_relationships, source: :followed
+  #=> 自分がフォローしている人の、userオブジェクトの集合を取得できるようにしている。
+  # has_many や、belongs_to で、モデル間の関連付けが適切に行われている状態で、その土台の上に、抽象化されたメソッドを定義している。
+  # @user.active_relationships.map { |r| r.followed } これでも実現できるが、より簡潔にするための、has_many through と呼ばれるアプローチ。
+  # has_many through は、多対多のモデルの関連付けになっているが、上記の通り、@user.active_relationships.map { |r| r.followed } でそれが実現できるわけで、
+  # そのためのメソッドというわけではない。そうではなく、 has_many through では、内部で発行されるsql が最適化されて高速化されている。
+  # オープンソースなので、どのようなsql になっているのか確認可能だが、かなり複雑。
+  
+  
+  has_many :passive_relationships, class_name:  "Relationship",
+                                   foreign_key: "followed_id",
+                                   dependent:   :destroy
+                                   
+  has_many :followers, through: :passive_relationships, source: :follower
+  
+  
   attr_accessor :remember_token, :activation_token, :reset_token
   #=> 仮想的属性を与える。仮想的属性の生存期間は、次のリクエストが発行されるまで。コンソール上では、exit するまで。
   # 仮想的属性は、一時的にオブジェクトに値を持たせるが、データベースには反映させない情報。今回は、この情報が消失するまでに、ユーザーのクッキーに
@@ -167,9 +190,31 @@ class User < ApplicationRecord
   # 試作feedの定義
   # 完全な実装は次章の「ユーザーをフォローする」を参照
   def feed
-    Micropost.where("user_id = ?",self.id)
+     following_ids = "SELECT followed_id FROM relationships
+                     WHERE follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids})
+                     OR user_id = :user_id", user_id: id)
     #=> current_user.feed は、feedメソッドを用意せずに、current_user.microposts でもコーディングできてしまうが、後々フォローしている人の
     # micropostsmicroposts のデータの集合を取得するということもしたくて、どうせこのメソッドが必要になるので、先回りして、feedメソッドを用意している。
+  end
+  
+  
+  # ユーザーをフォローする
+  def follow(other_user)
+    self.following << other_user
+    #self.active_relationships.create(followed_id: other_user.id)
+  end
+
+  # ユーザーをフォロー解除する
+  def unfollow(other_user)
+    self.active_relationships.find_by(followed_id: other_user.id).destroy
+  end
+
+  # 現在のユーザーがフォローしてたらtrueを返す
+  def following?(other_user)
+    self.following.include?(other_user)
+    #=> [1,2,3,4,5].include?(1) => true  実際に実行できる、rubyの標準のメソッド。上記の.include?() は、これに似せて、
+    # オブジェクトに対しても実行できるように、rails 側でも用意されたもの。
   end
 
    private

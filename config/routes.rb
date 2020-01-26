@@ -27,8 +27,18 @@ Rails.application.routes.draw do
   delete '/logout',  to: 'sessions#destroy'
   #=> resources を使わなくても、createアクションを反応させる時はpostリクエスト、という風に、restful風味にすることは可能。
   
-  resources :users
+  # resources :users
   # rails routes で、一番左のPrefixのところは、最後に_pathを付けると、名前付きルートになる。
+  
+  resources :users do #=> resources :users  には、実はブロックを渡すことができる。
+    member do
+      #=> '/users/:id/...'  このようなルーティングを設定したいとき、memberメソッドでこのようにして実現する。
+      get :following, :followers
+      #=> get '/users/:id/following', 
+      #   get '/users/:id/followers'
+      #  反応するアクションは、rails routes で確認。
+    end
+  end
   
   resources :account_activations, only: [:edit]
   #=> get '/account_activations/:id/edit', to: 'account_activations#edit'
@@ -36,6 +46,7 @@ Rails.application.routes.draw do
   
   resources :password_resets,     only: [:new, :create, :edit, :update]
   resources :microposts,          only: [:create, :destroy]
+  resources :relationships,       only: [:create, :destroy]
 
   root 'application#hello'
 
