@@ -7,10 +7,12 @@ class RelationshipsController < ApplicationController
   def create
     @user = User.find(params[:followed_id])
     current_user.follow(@user)
-    respond_to do |format|
+    respond_to do |format|　
       format.html { redirect_to @user }
       format.js
     end
+    #=> form_for の引数で、remote: true にしたので、format.js　の方が実行される。respond_to メソッドでリクエストの種類によって、
+    # 実行する処理を場合分けしている。上から順に処理を実行する逐次処理ではなく、分岐処理。
   end
 
   def destroy

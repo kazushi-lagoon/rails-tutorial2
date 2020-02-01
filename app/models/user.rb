@@ -195,7 +195,16 @@ class User < ApplicationRecord
     Micropost.where("user_id IN (#{following_ids})
                      OR user_id = :user_id", user_id: id)
     #=> current_user.feed は、feedメソッドを用意せずに、current_user.microposts でもコーディングできてしまうが、後々フォローしている人の
-    # micropostsmicroposts のデータの集合を取得するということもしたくて、どうせこのメソッドが必要になるので、先回りして、feedメソッドを用意している。
+    # microposts のデータの集合を取得するということもしたくて、どうせこのメソッドが必要になるので、先回りして、feedメソッドを用意している。
+    # ruby など、一般的なプログラミング言語では、複数行で一つの目的を目指すことがよくあるが、DBのsql の世界では、レスポンスタイムの観点から、
+    # それをなるべく少ない行数、つまり問い合わせの数にすることが求められる。
+    # Micropost.where("user_id IN (?) OR user_id = ?", self.following_ids, self.id) でも可能。following_ids は、集合に対してid だけを取り出すもので、
+    # self.following.map { |i| i.id } を意味する。has_many :following によって、ActiveRecordで用意された。また、? のところに、順番通りに、
+    # 引数が渡される。? を使わずに、直接、式展開で、#{self.following_ids} のようにして渡しても動くが、セキュリティの観点から、? にして渡している。
+    # また、この書き方だと、where と、following_ids で、二回DB に問い合わせしている。セレクト文の中にセレクト文を入れることを、サブセレクトと
+    # 呼ぶが、上記の実際に採用した方のサブセレクトの書き方だと、一回の問い合わせになり、高速化される。これも二回問い合わせしているように思われるが、
+    # sql の世界ではそうなるらしい。具体的になぜそうなるかは、sql の世界の話になってしまうので、そういうものとして割り切る。
+    
   end
   
   
